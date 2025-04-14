@@ -103,16 +103,27 @@ document.addEventListener("DOMContentLoaded", function () {
     pathCoordinates.push([Math.round(pos.x), Math.round(pos.y)]);
   }
 
+  let mouseX = 0,
+    mouseY = 0;
+  let ticking = false;
+
   function draw(e) {
     e.preventDefault();
     if (!isDrawing || !isRecording) return;
-
-    const pos = getPosition(e);
-
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    if (!ticking) {
+      window.requestAnimationFrame(function () {
+        const pos = getPosition({ clientX: mouseX, clientY: mouseY });
+        ctx.lineWidth = 2;
     ctx.lineTo(pos.x, pos.y);
     ctx.stroke();
 
     pathCoordinates.push([Math.round(pos.x), Math.round(pos.y)]);
+        ticking = false;
+      });
+      ticking = true;
+    }
   }
 
   function stopDrawing() {
