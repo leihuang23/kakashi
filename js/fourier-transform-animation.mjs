@@ -8,10 +8,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const canvasContainer = document.getElementById("animation-canvas-container");
 
   const fullScreenBtn = document.getElementById("fullScreenBtn");
+  const exitFullScreenIcon = document.getElementById("exit-fullscreen-icon");
+  const enterFullScreenIcon = document.getElementById("enter-fullscreen-icon");
 
   fullScreenBtn.addEventListener("click", function () {
+    exitFullScreenIcon.classList.toggle("hidden");
+    enterFullScreenIcon.classList.toggle("hidden");
     canvasContainer.classList.toggle("fullscreen");
-    // resize after layout change
+    // wait for layout change to finish before resizing the canvas
     requestAnimationFrame(() => {
       window.dispatchEvent(new Event("resize"));
     });

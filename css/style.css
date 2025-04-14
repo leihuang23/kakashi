@@ -140,6 +140,10 @@ button:disabled {
   z-index: 10;
 }
 
+#fullScreenBtn:hover {
+  background-color: #333;
+}
+
 .fullscreen {
   position: fixed !important;
   top: 0 !important;
@@ -150,4 +154,8 @@ button:disabled {
   height: 100vh !important;
   z-index: 9999 !important;
   background-color: #111;
+}
+
+.hidden {
+  display: none;
 }
