@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./css/style.css?v=62a004b95" />
     <script src="./lib/app-state.mjs" type="module"></script>
     <script src="./lib/tiny-state.mjs" type="module"></script>
     <script src="./lib/list.mjs" type="module"></script>
     <script src="./lib/data.mjs" type="module"></script>
-    <script src="./js/fourier-transform-animation.mjs?v=13bcc95d2d" type="module"></script>
-    <script src="./js/path-collector.mjs" type="module"></script>
+    <script src="./js/fourier-transform-animation.mjs?v=62a004b95" type="module"></script>
+    <script src="./js/path-collector.mjs?v=62a004b95" type="module"></script>
     <title>Kakashi</title>
   </head>
   <body>
@@ -24,8 +24,8 @@
     </header>
     <main>
       <div id="path-recorder">
-        <div class="canvas-container" id="drawingCanvasContainer">
-          <canvas id="drawingCanvas"></canvas>
+        <div id="drawing-canvas-container">
+          <canvas id="drawing-canvas"></canvas>
         </div>
         <div class="status" id="status">
           Ready to draw. Click "Start Drawing" to begin.
@@ -37,7 +37,7 @@
           <button id="animateBtn">Animate Your Draw</button>
         </div>
       </div>
-      <div id="canvas-container">
+      <div id="animation-canvas-container">
         <button id="fullScreenBtn" title="Toggle fullscreen">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -51,7 +51,7 @@
             />
           </svg>
         </button>
-        <canvas id="canvas"></canvas>
+        <canvas id="animation-canvas"></canvas>
       </div>
     </main>
     <footer>

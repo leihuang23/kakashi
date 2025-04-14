@@ -1,9 +1,9 @@
 import { coordinatesSignal } from "../lib/app-state.mjs";
 
 document.addEventListener("DOMContentLoaded", function () {
-  const canvas = document.getElementById("drawingCanvas");
+  const canvas = document.getElementById("drawing-canvas");
   const ctx = canvas.getContext("2d");
-  const canvasContainer = document.getElementById("drawingCanvasContainer");
+  const canvasContainer = document.getElementById("drawing-canvas-container");
   const startBtn = document.getElementById("startBtn");
   const clearBtn = document.getElementById("clearBtn");
   //   const getPathBtn = document.getElementById("getPathBtn");

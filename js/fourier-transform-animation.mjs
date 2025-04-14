@@ -3,9 +3,9 @@ import { effect } from "../lib/tiny-state.mjs";
 import { coordinatesSignal } from "../lib/app-state.mjs";
 
 document.addEventListener("DOMContentLoaded", function () {
-  const canvas = document.getElementById("canvas");
+  const canvas = document.getElementById("animation-canvas");
   const ctx = canvas.getContext("2d");
-  const canvasContainer = document.getElementById("canvas-container");
+  const canvasContainer = document.getElementById("animation-canvas-container");
 
   const fullScreenBtn = document.getElementById("fullScreenBtn");
 

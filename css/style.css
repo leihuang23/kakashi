@@ -41,12 +41,11 @@ main {
 }
 
 #path-recorder {
-  font-family: Arial, sans-serif;
   margin: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: calc(50% - 10px); /* has to be this way for fullscreen to work */
+  width: calc(50% - 10px); /* flex-grow won't work for fullscreen support */
   @media (max-width: 768px) {
     padding: 0;
     margin: 0;
@@ -54,7 +53,7 @@ main {
   }
 }
 
-#canvas-container {
+#animation-canvas-container {
   position: relative;
   width: calc(50% - 10px);
   @media (max-width: 768px) {
@@ -65,7 +64,7 @@ main {
   }
 }
 
-.canvas-container {
+#drawing-canvas-container {
   box-sizing: border-box;
   width: 100%;
   position: relative;
@@ -76,7 +75,7 @@ main {
   }
 }
 
-.canvas-container canvas {
+#drawing-canvas {
   display: block;
   background-color: #f8f8f8;
   cursor: crosshair;
@@ -120,7 +119,7 @@ button:disabled {
   margin-top: 10px;
 }
 
-#canvas {
+#animation-canvas {
   width: 100%;
   height: auto;
   display: block;
