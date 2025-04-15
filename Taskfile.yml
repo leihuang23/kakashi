@@ -4,7 +4,7 @@ tasks:
   watch:
     desc: Serve the current directory and open in browser
     cmds:
-      - python3 -m http.server 8080 & sleep 1 && open http://localhost:8080
+      - npx http-server -o -c-1
 
   update:
     desc: Add version parameters to changed CSS and JS files in index.html

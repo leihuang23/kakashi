@@ -78,13 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let time = 0;
     const dt = (2 * Math.PI) / fourier.length; // Time step per frame
     let path = List(fourier.length);
-    const animationSpeed = 1; // Lower = slower, 1.0 = original speed
-    let lastFrameTime = 0;
     let animationFrameId = null;
-
-    let isPaused = false;
-    let pauseStartTime = 0;
-    const pauseDuration = 1500;
 
     function resizeCanvas() {
       if (animationFrameId) {
@@ -111,102 +105,79 @@ document.addEventListener("DOMContentLoaded", function () {
 
       path.clear();
       time = 0;
-      lastFrameTime = 0;
 
       animationFrameId = requestAnimationFrame(draw);
     }
 
-    function draw(currentTime) {
-      if (lastFrameTime === 0) lastFrameTime = currentTime;
-      if (isPaused) {
-        if (currentTime - pauseStartTime >= pauseDuration) {
-          isPaused = false;
-          time = time % (2 * Math.PI);
-          path.clear();
-        } else {
-          animationFrameId = requestAnimationFrame(draw);
-          return;
-        }
+    function draw() {
+      // Use CSS dimensions for drawing logic before DPR scaling
+      const cssWidth = parseFloat(canvas.style.width) || canvas.width;
+      const cssHeight = parseFloat(canvas.style.height) || canvas.height;
+
+      // Clear the canvas (considering the DPR scaling applied in resizeCanvas)
+      // We need to clear the *physical* pixel area
+      ctx.save();
+      ctx.resetTransform(); // Temporarily remove DPR scaling for clearRect
+      ctx.fillStyle = "#111";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+
+      ctx.save();
+
+      const scaleX = cssWidth / designWidth;
+      const scaleY = cssHeight / designHeight;
+      const scale = Math.min(scaleX, scaleY) * 0.9;
+
+      ctx.translate(cssWidth / 2, cssHeight / 2);
+      ctx.scale(scale, scale);
+      ctx.translate(-designCenterX, -designCenterY);
+
+      let x = 0;
+      let y = 0;
+      const baseLineWidth = 1;
+
+      for (let i = 0; i < fourier.length; i++) {
+        let prevX = x;
+        let prevY = y;
+        const freq = fourier[i].freq;
+        const radius = fourier[i].amp;
+        const phase = fourier[i].phase;
+        x += radius * Math.cos(freq * time + phase);
+        y += radius * Math.sin(freq * time + phase);
+
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.lineWidth = baseLineWidth / scale;
+        ctx.beginPath();
+        ctx.arc(prevX, prevY, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = baseLineWidth / scale;
+        ctx.beginPath();
+        ctx.moveTo(prevX, prevY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
       }
 
-      const elapsed = currentTime - lastFrameTime;
+      path.prepend({ x, y });
 
-      // Only update if enough time has passed (for slower animation)
-      if (elapsed > 1000 / 60 / animationSpeed) {
-        lastFrameTime = currentTime;
-
-        // Use CSS dimensions for drawing logic before DPR scaling
-        const cssWidth = parseFloat(canvas.style.width) || canvas.width;
-        const cssHeight = parseFloat(canvas.style.height) || canvas.height;
-
-        // Clear the canvas (considering the DPR scaling applied in resizeCanvas)
-        // We need to clear the *physical* pixel area
-        ctx.save();
-        ctx.resetTransform(); // Temporarily remove DPR scaling for clearRect
-        ctx.fillStyle = "#111";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
-
-        ctx.save();
-
-        const scaleX = cssWidth / designWidth;
-        const scaleY = cssHeight / designHeight;
-        const scale = Math.min(scaleX, scaleY) * 0.9;
-
-        ctx.translate(cssWidth / 2, cssHeight / 2);
-        ctx.scale(scale, scale);
-        ctx.translate(-designCenterX, -designCenterY);
-
-        let x = 0;
-        let y = 0;
-        const baseLineWidth = 1;
-
-        for (let i = 0; i < fourier.length; i++) {
-          let prevX = x;
-          let prevY = y;
-          const freq = fourier[i].freq;
-          const radius = fourier[i].amp;
-          const phase = fourier[i].phase;
-          x += radius * Math.cos(freq * time + phase);
-          y += radius * Math.sin(freq * time + phase);
-
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-          ctx.lineWidth = baseLineWidth / scale;
-          ctx.beginPath();
-          ctx.arc(prevX, prevY, radius, 0, 2 * Math.PI);
-          ctx.stroke();
-
-          ctx.strokeStyle = "#fff";
-          ctx.lineWidth = baseLineWidth / scale;
-          ctx.beginPath();
-          ctx.moveTo(prevX, prevY);
-          ctx.lineTo(x, y);
-          ctx.stroke();
+      ctx.beginPath();
+      if (path.length > 0) {
+        ctx.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) {
+          ctx.lineTo(path[i].x, path[i].y);
         }
+        ctx.strokeStyle = "#ff4081";
+        ctx.lineWidth = (baseLineWidth * 2) / scale;
+        ctx.stroke();
+      }
 
-        path.prepend({ x, y });
-        // if (path.length > 700) {
-        // path.pop();
-        // }
+      ctx.restore();
 
-        ctx.beginPath();
-        if (path.length > 0) {
-          ctx.moveTo(path[0].x, path[0].y);
-          for (let i = 1; i < path.length; i++) {
-            ctx.lineTo(path[i].x, path[i].y);
-          }
-          ctx.strokeStyle = "#ff4081";
-          ctx.lineWidth = (baseLineWidth * 2) / scale;
-          ctx.stroke();
-        }
-
-        ctx.restore();
-
-        time += dt;
-        if (time >= 2 * Math.PI) {
-          isPaused = true;
-          pauseStartTime = currentTime;
-        }
+      time += dt;
+      if (time >= 2 * Math.PI) {
+        time = time % (2 * Math.PI);
+        path.clear();
       }
 
       animationFrameId = requestAnimationFrame(draw);
