@@ -31,6 +31,11 @@ document.addEventListener("DOMContentLoaded", function () {
       isRecording = false;
       startBtn.textContent = "Start Drawing";
       statusElem.textContent = `Drawing completed! Recorded ${pathCoordinates.length} points.`;
+      navigator.clipboard
+        .writeText(JSON.stringify(smoothPath(pathCoordinates)))
+        .catch((err) => {
+          console.error("Failed to copy: ", err);
+        });
     }
   });
 
