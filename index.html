@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="./css/style.css?v=1744662763" />
+    <link rel="stylesheet" href="./css/style.css?v=1744735591" />
     <script src="./lib/app-state.mjs?v=1744708562" type="module"></script>
     <script src="./lib/tiny-state.mjs" type="module"></script>
     <script src="./lib/list.mjs" type="module"></script>
@@ -12,7 +12,7 @@
       src="./js/fourier-transform-animation.mjs?v=1744701261"
       type="module"
     ></script>
-    <script src="./js/path-collector.mjs?v=1744708562" type="module"></script>
+    <script src="./js/path-collector.mjs?v=1744735591" type="module"></script>
     <title>Kakashi</title>
   </head>
   <body>
@@ -34,6 +34,11 @@
           Ready to draw. Click "Start Drawing" to begin.
         </div>
         <div class="controls">
+          <input type="file" id="imageUpload" accept="image/*" class="hidden" />
+          <button id="uploadImageBtn">Upload Image</button>
+          <button id="confirmImageBtn" style="display: none">
+            Confirm Image Position
+          </button>
           <button id="startBtn">Start Drawing</button>
           <button id="clearBtn">Clear Canvas</button>
           <!-- <button id="getPathBtn">Get Path Coordinates</button> -->
