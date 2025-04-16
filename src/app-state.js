@@ -1,6 +1,6 @@
-import { signal } from "./tiny-state.mjs";
+import { signal } from "./lib/tiny-state.js";
 
-import { coordinates } from "./data.mjs";
+import { coordinates } from "./lib/data.js";
 
 const storedCoordinatesStr = localStorage.getItem("pathCoordinates");
 const safeParse = (data) => {

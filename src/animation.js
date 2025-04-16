@@ -1,8 +1,8 @@
-import { List } from "../lib/list.mjs";
-import { effect } from "../lib/tiny-state.mjs";
-import { coordinatesSignal } from "../lib/app-state.mjs";
+import { List } from "./lib/list.js";
+import { effect } from "./lib/tiny-state.js";
+import { coordinatesSignal } from "./app-state.js";
 
-document.addEventListener("DOMContentLoaded", function () {
+export function setupAnimation() {
   const canvas = document.getElementById("animation-canvas");
   const ctx = canvas.getContext("2d");
   const canvasContainer = document.getElementById("animation-canvas-container");
@@ -194,4 +194,4 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     };
   }
-});
+}
