@@ -42,7 +42,7 @@ export function setupDrawingCanvas() {
   initializeCanvas();
   attachEventListeners();
   resizeCanvas();
-  updateStatus("Ready to draw. You can upload an image or start drawing.");
+  updateStatus("Ready to draw.");
 }
 
 function initializeElements() {
@@ -58,9 +58,29 @@ function initializeElements() {
   drawingState.clearBtn = document.getElementById("clearBtn");
   drawingState.animatePathBtn = document.getElementById("animateBtn");
   drawingState.statusElem = document.getElementById("status");
-  drawingState.uploadImageBtn = document.getElementById("uploadImageBtn");
-  drawingState.imageUpload = document.getElementById("imageUpload");
   drawingState.confirmImageBtn = document.getElementById("confirmImageBtn");
+
+  if (import.meta.env.DEV) {
+    drawingState.uploadImageBtn = document.createElement("button");
+    drawingState.uploadImageBtn.id = "uploadImageBtn";
+    drawingState.uploadImageBtn.textContent = "Upload Image";
+    drawingState.uploadImageBtn.type = "button";
+
+    drawingState.imageUpload = document.createElement("input");
+    drawingState.imageUpload.id = "imageUpload";
+    drawingState.imageUpload.type = "file";
+    drawingState.imageUpload.accept = "image/*";
+    drawingState.imageUpload.style.display = "none";
+
+    drawingState.startBtn.parentNode.insertBefore(
+      drawingState.uploadImageBtn,
+      drawingState.startBtn
+    );
+    drawingState.startBtn.parentNode.insertBefore(
+      drawingState.imageUpload,
+      drawingState.startBtn
+    );
+  }
 }
 
 function initializeCanvas() {
@@ -75,13 +95,19 @@ function attachEventListeners() {
   drawingState.startBtn.addEventListener("click", toggleDrawing);
   drawingState.clearBtn.addEventListener("click", clearCanvas);
   drawingState.animatePathBtn.addEventListener("click", animatePath);
-  drawingState.uploadImageBtn.addEventListener("click", () =>
-    drawingState.imageUpload.click()
-  );
   drawingState.confirmImageBtn.addEventListener("click", confirmImagePosition);
 
   // Image upload handler
-  drawingState.imageUpload.addEventListener("change", handleImageUpload);
+  if (
+    import.meta.env.DEV &&
+    drawingState.uploadImageBtn &&
+    drawingState.imageUpload
+  ) {
+    drawingState.uploadImageBtn.addEventListener("click", () =>
+      drawingState.imageUpload.click()
+    );
+    drawingState.imageUpload.addEventListener("change", handleImageUpload);
+  }
 
   // Canvas mouse events
   drawingState.canvas.addEventListener("mousedown", handleMouseDown);
