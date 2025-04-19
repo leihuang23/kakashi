@@ -1,4 +1,4 @@
-import { signal } from "./lib/tiny-state.js";
+import { signal } from "./lib/tiny-signal.js";
 
 import { coordinates } from "./lib/data.js";
 

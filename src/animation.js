@@ -1,5 +1,5 @@
 import { List } from "./lib/list.js";
-import { effect } from "./lib/tiny-state.js";
+import { effect } from "./lib/tiny-signal.js";
 import { coordinatesSignal } from "./app-state.js";
 
 export function setupAnimation() {
