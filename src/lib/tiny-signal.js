@@ -13,43 +13,6 @@ let ExecCount = 0;
 let Scheduler = null;
 
 /**
- * Performs a deep equality check between two values.
- * @param {*} a - The first value.
- * @param {*} b - The second value.
- * @returns {boolean} Whether the values are deeply equal.
- * @private
- */
-function deepEqual(a, b) {
-  if (a === b) return true;
-
-  if (
-    a == null ||
-    b == null ||
-    typeof a !== "object" ||
-    typeof b !== "object"
-  ) {
-    return false;
-  }
-
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    return a.every((item, index) => deepEqual(item, b[index]));
-  }
-
-  if (Array.isArray(a) !== Array.isArray(b)) return false;
-
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
-
-  if (keysA.length !== keysB.length) return false;
-
-  return keysA.every(
-    (key) =>
-      Object.prototype.hasOwnProperty.call(b, key) && deepEqual(a[key], b[key])
-  );
-}
-
-/**
  * Subscribes a computation to a set of subscriptions.
  * @param {Object} running - The computation to subscribe.
  * @param {Set} subscriptions - The set of subscriptions.
@@ -215,7 +178,7 @@ export function signal(initialValue) {
       return value;
     },
     set value(nextValue) {
-      if (deepEqual(value, nextValue)) return;
+      if (Object.is(value, nextValue)) return;
       value = nextValue;
 
       runUpdates(() => {
