@@ -1,6 +1,8 @@
-import { signal } from "./lib/tiny-signal.js";
+import { enableScheduling, signal } from "./lib/tiny-signal.js";
 
 import { coordinates } from "./lib/data.js";
+
+enableScheduling();
 
 const storedCoordinatesStr = localStorage.getItem("pathCoordinates");
 const safeParse = (data) => {
