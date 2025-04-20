@@ -1,6 +1,7 @@
 import { List } from "./lib/list.js";
 import { effect } from "./lib/tiny-signal.js";
 import { coordinatesSignal } from "./app-state.js";
+import { dft } from "./lib/dft.js";
 
 export function setupAnimation() {
   const canvas = document.getElementById("animation-canvas");
@@ -11,6 +12,11 @@ export function setupAnimation() {
   const exitFullScreenIcon = document.getElementById("exit-fullscreen-icon");
   const enterFullScreenIcon = document.getElementById("enter-fullscreen-icon");
 
+  effect(() => {
+    const coordinates = coordinatesSignal.value;
+    return drawAnimationCanvas(coordinates);
+  });
+
   fullScreenBtn.addEventListener("click", function () {
     exitFullScreenIcon.classList.toggle("hidden");
     enterFullScreenIcon.classList.toggle("hidden");
@@ -19,11 +25,6 @@ export function setupAnimation() {
     requestAnimationFrame(() => {
       window.dispatchEvent(new Event("resize"));
     });
-  });
-
-  effect(() => {
-    const coordinates = coordinatesSignal.value;
-    return drawAnimationCanvas(coordinates);
   });
 
   function drawAnimationCanvas(coordinates) {
@@ -48,29 +49,6 @@ export function setupAnimation() {
       re: pt[0],
       im: pt[1],
     }));
-
-    // Discrete Fourier Transform (DFT)
-    function dft(x) {
-      const N = x.length;
-      const X = [];
-      for (let k = 0; k < N; k++) {
-        let re = 0,
-          im = 0;
-        for (let n = 0; n < N; n++) {
-          const phi = (2 * Math.PI * k * n) / N;
-          // Multiply by e^(-i*phi) = cos(phi) - i*sin(phi)
-          re += x[n].re * Math.cos(phi) + x[n].im * Math.sin(phi);
-          im += -x[n].re * Math.sin(phi) + x[n].im * Math.cos(phi);
-        }
-        re /= N;
-        im /= N;
-        const freq = k;
-        const amp = Math.hypot(re, im);
-        const phase = Math.atan2(im, re);
-        X.push({ re, im, freq, amp, phase });
-      }
-      return X;
-    }
 
     let fourier = dft(complexPoints);
     fourier.sort((a, b) => b.amp - a.amp);

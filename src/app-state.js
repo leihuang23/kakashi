@@ -1,17 +1,11 @@
-import { signal } from "./lib/tiny-signal.js";
+import { signal, createPersistMiddleware, use } from "./lib/tiny-signal.js";
 
 import { coordinates } from "./lib/data.js";
 
-const storedCoordinatesStr = localStorage.getItem("pathCoordinates");
-const safeParse = (data) => {
-  try {
-    return JSON.parse(data);
-  } catch (error) {
-    console.error("Error parsing coordinates from localStorage:", error);
-    return null;
-  }
-};
+use(createPersistMiddleware());
 
-const initialCoordinates = safeParse(storedCoordinatesStr) ?? coordinates;
-
-export const coordinatesSignal = signal(initialCoordinates);
+export const coordinatesSignal = signal(coordinates, {
+  persist: {
+    key: "pathCoordinates",
+  },
+});

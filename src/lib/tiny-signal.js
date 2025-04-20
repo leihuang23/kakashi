@@ -11,6 +11,42 @@ let Updates = null;
 let Effects = null;
 let ExecCount = 0;
 let Scheduler = null;
+let Middleware = [];
+
+/**
+ * Registers middleware to intercept and transform signals and computations.
+ * @param {Function} middlewareFn - A function that receives (type, value, context) and returns a new value or undefined.
+ * @returns {Function} A function to remove the middleware.
+ */
+export function use(middlewareFn) {
+  Middleware.push(middlewareFn);
+  return () => {
+    const index = Middleware.indexOf(middlewareFn);
+    if (index !== -1) {
+      Middleware.splice(index, 1);
+    }
+  };
+}
+
+/**
+ * Applies all registered middleware to a value.
+ * @param {string} type - The type of operation ('get', 'set', 'compute', etc.).
+ * @param {*} value - The value to transform.
+ * @param {Object} context - Additional context for the middleware.
+ * @returns {*} The transformed value.
+ * @private
+ */
+function applyMiddleware(type, value, context = {}) {
+  return Middleware.reduce((result, middleware) => {
+    try {
+      const transformed = middleware(type, result, context);
+      return transformed !== undefined ? transformed : result;
+    } catch (err) {
+      console.error("Middleware error:", err);
+      return result;
+    }
+  }, value);
+}
 
 /**
  * Subscribes a computation to a set of subscriptions.
@@ -163,23 +199,47 @@ export function enableScheduling(scheduler = "animation") {
  * Creates a reactive signal.
  * @template T
  * @param {T} initialValue - The initial value of the signal.
+ * @param {Object} [options] - Signal options.
  * @returns {{
  *   value: T,
  *   subscribe: (subscriber: Object) => () => void
  * }}
  */
-export function signal(initialValue) {
+export function signal(initialValue, options = {}) {
   let value = initialValue;
   const subscriptions = new Set();
+
+  if (Middleware.length > 0) {
+    value = applyMiddleware("init", value, {
+      type: "signal",
+      ...options,
+    });
+  }
 
   return {
     get value() {
       if (Listener) subscribe(Listener, subscriptions);
+
+      if (Middleware.length > 0) {
+        return applyMiddleware("get", value, {
+          type: "signal",
+          ...options,
+        });
+      }
       return value;
     },
     set value(nextValue) {
-      if (Object.is(value, nextValue)) return;
-      value = nextValue;
+      let processedValue = nextValue;
+      if (Middleware.length > 0) {
+        processedValue = applyMiddleware("set", nextValue, {
+          type: "signal",
+          prevValue: value,
+          ...options,
+        });
+      }
+
+      if (Object.is(value, processedValue)) return;
+      value = processedValue;
 
       runUpdates(() => {
         for (const sub of [...subscriptions]) {
@@ -225,12 +285,28 @@ function createComputation(fn, pure = false) {
       Listener = this;
 
       try {
+        applyMiddleware("beforeCompute", null, {
+          computation: this,
+          pure,
+        });
+
         const result = fn();
-        this.value = result;
+
+        const processedResult = applyMiddleware("compute", result, {
+          computation: this,
+          pure,
+        });
+
+        this.value = processedResult;
         this.state = 0;
-        return result;
+        return processedResult;
       } finally {
         Listener = prevListener;
+
+        applyMiddleware("afterCompute", null, {
+          computation: this,
+          pure,
+        });
       }
     },
   };
@@ -272,6 +348,8 @@ export function effect(fn) {
       }
       return;
     }
+
+    applyMiddleware("beforeEffect", null, { fn });
     isRunning = true;
 
     try {
@@ -284,6 +362,8 @@ export function effect(fn) {
       if (typeof cleanupFn === "function") {
         lastCleanup = cleanupFn;
       }
+
+      applyMiddleware("afterEffect", null, { fn, cleanup: lastCleanup });
     } finally {
       isRunning = false;
     }
@@ -304,5 +384,114 @@ export function effect(fn) {
  * @returns {*} The result of the function.
  */
 export function batch(fn) {
-  return runUpdates(fn, false);
+  applyMiddleware("beforeBatch", null, { fn });
+
+  const result = runUpdates(fn, false);
+
+  return applyMiddleware("afterBatch", result, { fn });
+}
+
+/**
+ * Creates a middleware for logging signal operations.
+ * @param {Object} options - Configuration options.
+ * @param {boolean} [options.logGets=false] - Whether to log get operations.
+ * @param {boolean} [options.logSets=true] - Whether to log set operations.
+ * @param {boolean} [options.logComputes=false] - Whether to log computation results.
+ * @param {boolean} [options.logEffects=false] - Whether to log effect executions.
+ * @returns {Function} A middleware function.
+ */
+export function createLoggerMiddleware(options = {}) {
+  const {
+    logGets = false,
+    logSets = true,
+    logComputes = false,
+    logEffects = false,
+  } = options;
+
+  return (type, value, context) => {
+    if (type === "get" && logGets) {
+      console.log(`[signal:get]`, value);
+    } else if (type === "set" && logSets) {
+      console.log(`[signal:set]`, context.prevValue, "→", value);
+    } else if (type === "compute" && logComputes) {
+      console.log(`[signal:compute]`, value, context);
+    } else if (type === "beforeEffect" && logEffects) {
+      console.log(`[signal:effect:start]`, context);
+    } else if (type === "afterEffect" && logEffects) {
+      console.log(`[signal:effect:end]`, context);
+    }
+
+    return value;
+  };
+}
+
+/**
+ * Creates middleware that validates signal values.
+ * @param {Function} validator - Function that receives value and returns boolean.
+ * @param {Function} [errorHandler] - Optional handler for invalid values.
+ * @returns {Function} A middleware function.
+ */
+export function createValidatorMiddleware(validator, errorHandler) {
+  return (type, value, context) => {
+    if (type === "set" || type === "init") {
+      if (!validator(value, context)) {
+        if (errorHandler) {
+          return errorHandler(value, context);
+        }
+        console.error(`[signal:validation] Value failed validation:`, value);
+        return context.prevValue; // Return previous value if validation fails
+      }
+    }
+    return value;
+  };
+}
+
+/**
+ * Creates middleware for persisting signal values to localStorage.
+ * @param {Object} options - Global configuration options.
+ * @param {Function} [options.serialize] - Function to serialize values (defaults to JSON.stringify).
+ * @param {Function} [options.deserialize] - Function to deserialize values (defaults to JSON.parse).
+ * @returns {Function} A middleware function.
+ */
+export function createPersistMiddleware(options = {}) {
+  const { serialize = JSON.stringify, deserialize = JSON.parse } = options;
+
+  return (type, value, context) => {
+    if (!context.persist) {
+      return value;
+    }
+
+    const key = context.persist.key;
+    if (!key) {
+      console.warn("[persist] Missing storage key in persist options", context);
+      return value;
+    }
+
+    const signalOptions = context.persist;
+    const signalSerialize = signalOptions.serialize || serialize;
+    const signalDeserialize = signalOptions.deserialize || deserialize;
+
+    if (type === "init") {
+      try {
+        const stored = localStorage.getItem(key);
+        if (stored !== null) {
+          return signalDeserialize(stored);
+        }
+      } catch (err) {
+        console.error(`[persist] Failed to load value for key "${key}":`, err);
+      }
+
+      return value ?? signalOptions.defaultValue;
+    }
+
+    if (type === "set") {
+      try {
+        localStorage.setItem(key, signalSerialize(value));
+      } catch (err) {
+        console.error(`[persist] Failed to save value for key "${key}":`, err);
+      }
+    }
+
+    return value;
+  };
 }

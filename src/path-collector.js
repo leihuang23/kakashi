@@ -247,9 +247,7 @@ function animatePath() {
     return;
   }
 
-  const smoothedPath = smoothPath(drawingState.pathCoordinates);
-  coordinatesSignal.value = smoothedPath;
-  localStorage.setItem("pathCoordinates", JSON.stringify(smoothedPath));
+  coordinatesSignal.value = smoothPath(drawingState.pathCoordinates);
   clearCanvas();
 }
 
