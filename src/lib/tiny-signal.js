@@ -228,6 +228,15 @@ export function signal(initialValue, options = {}) {
       }
       return value;
     },
+    peek() {
+      if (Middleware.length > 0) {
+        return applyMiddleware("peek", value, {
+          type: "signal",
+          ...options,
+        });
+      }
+      return value;
+    },
     set value(nextValue) {
       let processedValue = nextValue;
       if (Middleware.length > 0) {
@@ -253,10 +262,6 @@ export function signal(initialValue, options = {}) {
           }
         }
       }, false);
-    },
-    subscribe(subscriber) {
-      subscriptions.add(subscriber);
-      return () => subscriptions.delete(subscriber);
     },
   };
 }
